@@ -45,3 +45,8 @@ def logout():
     # Función para cerrar sesión
     st.session_state.usuario_autenticado = None
     st.session_state.rol_usuario = None
+    # También actualizamos las variables que usa main.py para mantener coherencia
+    if 'usuario' in st.session_state:
+        st.session_state.usuario = None
+    if 'rol' in st.session_state:
+        st.session_state.rol = None
