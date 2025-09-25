@@ -1,6 +1,6 @@
 import streamlit as st
 from datetime import date
-from utils import df_to_csv_bytes
+from utils import df_to_excel_bytes  # Changed from df_to_csv_bytes
 import pandas as pd
 
 def admin_inventario_ui(inventario):
@@ -28,13 +28,13 @@ def admin_inventario_ui(inventario):
         # Mostrar tabla
         st.dataframe(df)
         
-        # Botón de descarga
-        csv_bytes = df_to_csv_bytes(df)
+        # Botón de descarga (cambiado a Excel)
+        excel_bytes = df_to_excel_bytes(df)
         st.download_button(
-            label=f"Descargar CSV de {categoria}",
-            data=csv_bytes,
-            file_name=f"inventario_{categoria.lower().replace(' ', '_')}.csv",
-            mime="text/csv"
+            label=f"Descargar Excel de {categoria}",
+            data=excel_bytes,
+            file_name=f"inventario_{categoria.lower().replace(' ', '_')}.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
 
 def admin_historial_ui(historial_json):
@@ -64,12 +64,13 @@ def admin_historial_ui(historial_json):
 
     if not filtro.empty:
         st.dataframe(filtro.sort_values("Fecha"))
-        csv_bytes = df_to_csv_bytes(filtro)
+        # Cambiado a Excel
+        excel_bytes = df_to_excel_bytes(filtro)
         st.download_button(
-            label="Descargar historial filtrado (CSV)",
-            data=csv_bytes,
-            file_name=f"historial_{empleado_sel}_{mes:02d}_{año}.csv".replace(" ", "_"),
-            mime="text/csv"
+            label="Descargar historial filtrado (Excel)",
+            data=excel_bytes,
+            file_name=f"historial_{empleado_sel}_{mes:02d}_{año}.xlsx".replace(" ", "_"),
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
     else:
         st.warning("No hay registros con ese filtro.")
@@ -152,3 +153,11 @@ def admin_delivery_ui(cargar_catalogo_delivery, guardar_catalogo_delivery, carga
 
     if not filtro.empty:
         st.dataframe(filtro.sort_values("Fecha"))
+        # Si quieres añadir un botón de descarga Excel para las ventas también:
+        excel_bytes = df_to_excel_bytes(filtro)
+        st.download_button(
+            label="Descargar ventas filtradas (Excel)",
+            data=excel_bytes,
+            file_name=f"ventas_delivery_{empleado_sel}_{mes:02d}_{año}.xlsx".replace(" ", "_"),
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
