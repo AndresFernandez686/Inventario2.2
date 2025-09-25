@@ -7,7 +7,7 @@ from persistencia import (
     cargar_historial, cargar_catalogo_delivery, guardar_catalogo_delivery,
     guardar_venta_delivery, cargar_ventas_delivery
 )
-from auth import login
+from auth import login, logout  # Importar también la función logout
 from ui_empleado import empleado_inventario_ui, empleado_delivery_ui
 from ui_admin import admin_inventario_ui, admin_historial_ui, admin_delivery_ui
 
@@ -157,9 +157,14 @@ def main():
     # Botón de cierre de sesión
     if st.session_state.usuario:
         if st.sidebar.button("Cerrar sesión"):
+            # Actualizar las variables en auth.py
+            logout()
+            
+            # Actualizar también las variables locales
             st.session_state.usuario = None
             st.session_state.rol = None
-            st.rerun()  # Usar st.rerun() en lugar de st.experimental_rerun()
+            
+            st.rerun()  # Recargar la página para mostrar el login
     
     # Si no hay usuario en la sesión, mostrar login
     if not st.session_state.usuario:
