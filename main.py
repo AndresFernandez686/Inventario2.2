@@ -149,55 +149,45 @@ opciones_valde = {
 def main():
     st.set_page_config(page_title="Heladería - Inventario y Delivery", page_icon="🍦", layout="wide")
     
-    # Inicialización del estado de sesión
-    if "usuario_autenticado" not in st.session_state:
-        st.session_state.usuario_autenticado = False
-        st.session_state.nombre_usuario = None
-        st.session_state.rol_usuario = None
+    # Inicializar el estado de la sesión
+    if "usuario" not in st.session_state:
+        st.session_state.usuario = None
+        st.session_state.rol = None
     
-    # Si el usuario no está autenticado, mostrar login
-    if not st.session_state.usuario_autenticado:
+    # Botón de cierre de sesión
+    if st.session_state.usuario:
+        if st.sidebar.button("Cerrar sesión"):
+            st.session_state.usuario = None
+            st.session_state.rol = None
+            st.rerun()  # Usar st.rerun() en lugar de st.experimental_rerun()
+    
+    # Si no hay usuario en la sesión, mostrar login
+    if not st.session_state.usuario:
         usuario, rol = login()
         if usuario and rol:
-            st.session_state.usuario_autenticado = True
-            st.session_state.nombre_usuario = usuario
-            st.session_state.rol_usuario = rol
-    else:
-        # Si ya está autenticado, usamos los valores guardados
-        usuario = st.session_state.nombre_usuario
-        rol = st.session_state.rol_usuario
+            st.session_state.usuario = usuario
+            st.session_state.rol = rol
+            st.rerun()  # Reiniciar la app para cargar con el usuario logueado
+        return  # Salir si no hay usuario autenticado
+
+    # A partir de aquí, el usuario está autenticado
+    st.sidebar.success(f"Usuario: {st.session_state.usuario} ({st.session_state.rol})")
     
-    # Botón para cerrar sesión
-    if st.session_state.usuario_autenticado:
-        if st.sidebar.button("Cerrar sesión"):
-            st.session_state.usuario_autenticado = False
-            st.session_state.nombre_usuario = None
-            st.session_state.rol_usuario = None
-            st.experimental_rerun()
-        
-        # Mostrar información de usuario en el sidebar
-        st.sidebar.write(f"Usuario: {usuario}")
-        st.sidebar.write(f"Rol: {rol}")
-
-    # Si no hay usuario autenticado, salir de la función
-    if not st.session_state.usuario_autenticado:
-        return
-
     inventario = cargar_inventario(productos_por_categoria)
 
-    if rol == 'empleado':
+    if st.session_state.rol == 'empleado':
         tab_inv, tab_deliv = st.tabs(["🧊 Inventario", "🚚 Delivery"])
         with tab_inv:
             empleado_inventario_ui(
-                inventario, usuario, opciones_valde,
+                inventario, st.session_state.usuario, opciones_valde,
                 guardar_inventario, guardar_historial
             )
         with tab_deliv:
             empleado_delivery_ui(
-                usuario, cargar_catalogo_delivery, guardar_venta_delivery, cargar_ventas_delivery
+                st.session_state.usuario, cargar_catalogo_delivery, guardar_venta_delivery, cargar_ventas_delivery
             )
 
-    elif rol == 'administrador':
+    elif st.session_state.rol == 'administrador':
         tab_inv, tab_hist, tab_deliv = st.tabs(["📦 Inventario", "📅 Historial", "🛠️ Delivery"])
         with tab_inv:
             admin_inventario_ui(inventario)
@@ -209,4 +199,9 @@ def main():
             )
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        st.error(f"Se ha producido un error: {str(e)}")
+        if st.button("Reintentar"):
+            st.rerun()
