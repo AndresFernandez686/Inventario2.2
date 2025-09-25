@@ -1,4 +1,4 @@
-#Logica y datos de usuarios
+# Logica y datos de usuarios
 import streamlit as st
 
 usuarios = {
@@ -9,6 +9,10 @@ usuarios = {
 }
 
 def login():
+    # Si ya hay un usuario autenticado, no mostrar el formulario
+    if st.session_state.get("usuario_autenticado", False):
+        return st.session_state.nombre_usuario, st.session_state.rol_usuario
+    
     # Usar columnas para centrar el formulario
     col1, col2, col3 = st.columns([1, 2, 1])
     
