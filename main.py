@@ -148,36 +148,61 @@ opciones_valde = {
 
 def main():
     st.set_page_config(page_title="Heladería - Inventario y Delivery", page_icon="🍦", layout="wide")
-    usuario, rol = login()
+    
+    # Inicializar session_state para autenticación persistente
+    if 'autenticado' not in st.session_state:
+        st.session_state['autenticado'] = False
+        st.session_state['usuario'] = None
+        st.session_state['rol'] = None
 
-    if not (usuario and rol):
-        # Se ha eliminado el mensaje de aviso
-        return
+    # Si no está autenticado, mostrar login
+    if not st.session_state['autenticado']:
+        usuario, rol = login()
+        if usuario and rol:
+            st.session_state['autenticado'] = True
+            st.session_state['usuario'] = usuario
+            st.session_state['rol'] = rol
+            st.experimental_rerun()  # Recargar la página para actualizar la UI
+    else:
+        # Recuperar datos de sesión
+        usuario = st.session_state['usuario']
+        rol = st.session_state['rol']
+        
+        # Mostrar una pequeña barra de usuario en la parte superior
+        col1, col2 = st.columns([3, 1])
+        with col2:
+            st.write(f"Usuario: {usuario} ({rol})")
+            if st.button("Cerrar sesión"):
+                st.session_state['autenticado'] = False
+                st.session_state['usuario'] = None
+                st.session_state['rol'] = None
+                st.experimental_rerun()
+        
+        # Cargar inventario
+        inventario = cargar_inventario(productos_por_categoria)
 
-    inventario = cargar_inventario(productos_por_categoria)
+        if rol == 'empleado':
+            tab_inv, tab_deliv = st.tabs(["🧊 Inventario", "🚚 Delivery"])
+            with tab_inv:
+                empleado_inventario_ui(
+                    inventario, usuario, opciones_valde,
+                    guardar_inventario, guardar_historial
+                )
+            with tab_deliv:
+                empleado_delivery_ui(
+                    usuario, cargar_catalogo_delivery, guardar_venta_delivery, cargar_ventas_delivery
+                )
 
-    if rol == 'empleado':
-        tab_inv, tab_deliv = st.tabs(["🧊 Inventario", "🚚 Delivery"])
-        with tab_inv:
-            empleado_inventario_ui(
-                inventario, usuario, opciones_valde,
-                guardar_inventario, guardar_historial
-            )
-        with tab_deliv:
-            empleado_delivery_ui(
-                usuario, cargar_catalogo_delivery, guardar_venta_delivery, cargar_ventas_delivery
-            )
-
-    elif rol == 'administrador':
-        tab_inv, tab_hist, tab_deliv = st.tabs(["📦 Inventario", "📅 Historial", "🛠️ Delivery"])
-        with tab_inv:
-            admin_inventario_ui(inventario)
-        with tab_hist:
-            admin_historial_ui(cargar_historial())
-        with tab_deliv:
-            admin_delivery_ui(
-                cargar_catalogo_delivery, guardar_catalogo_delivery, cargar_ventas_delivery
-            )
+        elif rol == 'administrador':
+            tab_inv, tab_hist, tab_deliv = st.tabs(["📦 Inventario", "📅 Historial", "🛠️ Delivery"])
+            with tab_inv:
+                admin_inventario_ui(inventario)
+            with tab_hist:
+                admin_historial_ui(cargar_historial())
+            with tab_deliv:
+                admin_delivery_ui(
+                    cargar_catalogo_delivery, guardar_catalogo_delivery, cargar_ventas_delivery
+                )
 
 if __name__ == "__main__":
     main()
